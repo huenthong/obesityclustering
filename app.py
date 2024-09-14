@@ -5,15 +5,12 @@ from sklearn.cluster import KMeans, MeanShift, DBSCAN, AgglomerativeClustering, 
 from sklearn.mixture import GaussianMixture
 from sklearn.preprocessing import StandardScaler, OneHotEncoder, LabelEncoder
 from sklearn.decomposition import PCA
-from sklearn.metrics import silhouette_score, calinski_harabasz_score, davies_bouldin_score
+from sklearn.metrics import silhouette_score
 from scipy import stats
 import matplotlib.pyplot as plt
 import seaborn as sns
-import random
 
 st.title('Obesity Risk Clustering App')
-
-# Load data
 df = pd.read_csv('ObesityDataSet.csv')
 
 # Feature Engineering
@@ -60,59 +57,46 @@ cluster_model = st.selectbox(
 )
 
 # Number of Clusters Input
-n_clusters = None
 if cluster_model in ['KMeans', 'Gaussian Mixture', 'Agglomerative Hierarchical Clustering', 'Spectral Clustering']:
     n_clusters = st.slider('Number of clusters', min_value=2, max_value=10, value=3)
 
-# Clustering Model Selection with Pre-Fine-tuned Parameters
+# Clustering Model Selection
 if cluster_model == 'KMeans':
-    kmeans_param_grid = {"n_clusters": [2, 3, 4, 5]}
-    kmeans = KMeans(n_clusters=n_clusters if n_clusters else 3, random_state=42)
+    kmeans = KMeans(n_clusters=n_clusters, random_state=42)
     pca_df['Cluster'] = kmeans.fit_predict(X_pca)
 
 elif cluster_model == 'MeanShift':
-    bandwidth_values = np.linspace(0.8, 1.5, num=10)
     bandwidth = st.slider('Bandwidth', min_value=0.5, max_value=2.0, value=1.0)
     mean_shift = MeanShift(bandwidth=bandwidth)
     pca_df['Cluster'] = mean_shift.fit_predict(X_pca)
 
 elif cluster_model == 'DBSCAN':
-    eps_values = np.linspace(0.1, 0.5, num=10)
-    min_samples_values = np.arange(3, 12)
     eps = st.slider('Epsilon', min_value=0.1, max_value=2.0, value=0.5)
     min_samples = st.slider('Minimum samples', min_value=5, max_value=20, value=10)
     dbscan = DBSCAN(eps=eps, min_samples=min_samples)
     pca_df['Cluster'] = dbscan.fit_predict(X_pca)
 
 elif cluster_model == 'Gaussian Mixture':
-    gmm_param_grid = {"n_components": [2, 3, 4]}
-    gmm = GaussianMixture(n_components=n_clusters if n_clusters else 3, random_state=42)
+    gmm = GaussianMixture(n_components=n_clusters, random_state=42)
     pca_df['Cluster'] = gmm.fit_predict(X_pca)
 
 elif cluster_model == 'Agglomerative Hierarchical Clustering':
-    linkage_options = ['ward', 'complete', 'average', 'single']
-    linkage = st.selectbox('Linkage criterion', linkage_options, index=0)
-    agg_clustering = AgglomerativeClustering(n_clusters=n_clusters if n_clusters else 3, linkage=linkage)
+    agg_clustering = AgglomerativeClustering(n_clusters=n_clusters)
     pca_df['Cluster'] = agg_clustering.fit_predict(X_pca)
 
 elif cluster_model == 'Spectral Clustering':
-    affinity_options = ['rbf', 'nearest_neighbors']
-    affinity = st.selectbox('Affinity', affinity_options, index=0)
-    spectral = SpectralClustering(n_clusters=n_clusters if n_clusters else 3, affinity=affinity, random_state=42)
+    spectral = SpectralClustering(n_clusters=n_clusters, random_state=42)
     pca_df['Cluster'] = spectral.fit_predict(X_pca)
 
-# Evaluation Metrics
+# Evaluation Metrics: Only Silhouette Score
 silhouette = silhouette_score(X_pca, pca_df['Cluster'])
-calinski_harabasz = calinski_harabasz_score(X_pca, pca_df['Cluster'])
-davies_bouldin = davies_bouldin_score(X_pca, pca_df['Cluster'])
 
-# Display Metrics
+# Display Silhouette Score
 st.write(f"Silhouette Score: {silhouette}")
-st.write(f"Calinski-Harabasz Index: {calinski_harabasz}")
-st.write(f"Davies-Bouldin Index: {davies_bouldin}")
 
 # Plot Clusters
 fig, ax = plt.subplots()
 sns.scatterplot(x=pca_df['PC1'], y=pca_df['PC2'], hue=pca_df['Cluster'], palette='tab10', ax=ax)
 st.pyplot(fig)
+
 
