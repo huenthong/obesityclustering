@@ -14,7 +14,7 @@ import random
 st.title('Obesity Risk Clustering App')
 
 # Load data
-df = pd.read_csv('ObesityDataSet.csv')
+df = pd.read_csv('pca_df.csv')
 
 # Feature Engineering
 df['BMI'] = df['Weight'] / (df['Height'] ** 2)
